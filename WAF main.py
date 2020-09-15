@@ -28,3 +28,23 @@ plt.plot(1e3*t[0:100], signal[0:100])
 plt.xlabel('time[ms]')
 plt.ylabel('amplitude [nm]')
 plt.show()
+
+####
+
+import matplotlib.pylab as pyl
+# Czas pomiędzy próbkami
+sampling_period = 0.0001
+
+# Generowanie punktów próbkowania
+ts = pyl.arange(0, 1, sampling_period)
+
+# Sygnał modulujący
+ym = pyl.sin(2.0 * pyl.pi * 1.0 * ts)
+
+# Nośna
+fc = 100.0
+mod_fact = 15.0
+yc = pyl.sin(2.0 * pyl.pi * (fc + mod_fact * ym) * ts)
+
+pyl.plot(ts, yc)
+pyl.show()
