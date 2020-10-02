@@ -1,33 +1,41 @@
-#from freqdemod import Signal
-import freqdemod
-import numpy as np
-import matplotlib.pylab as plt
+import pyaudio
+import wave
 
-PI2 = 2 * np.pi
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 2
+RATE = 44100
+RECORD_SECONDS = 10
+WAVE_OUTPUT_FILENAME = "output.wav"
 
-font = {'family' : 'serif',
-        'weight' : 'normal',
-        'size' : 20}
+p = pyaudio.PyAudio()
 
-plt.rc('font', **font)
-plt.rcParams['figure.figsize'] = 8, 6
+stream = p.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK)
 
-# test signal generation
+print("* recording")
 
-sr = 50e3 # sampling rate
-f0 = 2e3 # signal freq
-n = 60e3 # test points
-ampl = 1 # amplitude
-sn_rms = 0.01 # noise rms ampl.
+frames = []
 
-dt = 1/sr
-t = dt * np.arange(n)
-signal = ampl * np.sin(PI2*f0*t) + np.random.normal(0,sn_rms, t.size)
+for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+    data = stream.read(CHUNK)
+    frames.append(data)
 
-plt.plot(1e3*t[0:100], signal[0:100])
-plt.xlabel('time[ms]')
-plt.ylabel('amplitude [nm]')
-plt.show()
+print("* done recording")
+
+stream.stop_stream()
+stream.close()
+p.terminate()
+
+wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+wf.setnchannels(CHANNELS)
+wf.setsampwidth(p.get_sample_size(FORMAT))
+wf.setframerate(RATE)
+wf.writeframes(b''.join(frames))
+wf.close()
 
 ####
 
