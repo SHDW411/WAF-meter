@@ -96,7 +96,6 @@ def spectrum_analisis():
     global spectrum
     global max_freq
     spectrum = abs(np.fft.rfft(raw_frames_arr * signal.get_window(WINDOW, len(raw_frames_arr)), RATE))
-    #spectrum = abs(np.fft.rfft(raw_frames_arr))
     max_freq = np.argmax(spectrum)
     return max_freq
 
@@ -145,10 +144,9 @@ def plotter():
     stream = p.open(format=pyaudio.paFloat32, channels=1, rate=RATE, input=True, output=False, frames_per_buffer=BUFFER)
 
     # Definiowanie wykresów i linii do animacji
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
+    fig, (ax1, ax2, ax4) = plt.subplots(3, 1)
     line1 = ax2.plot([], [])[0]
     line2 = ax1.plot([], [])[0]
-    line3 = ax3.plot([], [])[0]
     line4 = ax4.plot([], [])[0]
     line5 = ax4.plot([], [])[0]
 
@@ -158,35 +156,7 @@ def plotter():
     ts = np.arange(0, 1024, 1 / RATE)
     r2 = np.arange(0, 1024)
     r3 = range(0, 1023)
-
     bar_x = range(3050, 3250, 5)
-
-    # Funkcja demodulująca
-    def fm_demod(x, df=1.0, fc=0.0):
-        ''' Perform FM demodulation of complex carrier.
-
-        Args:
-            x (array):  FM modulated complex carrier.
-            df (float): Normalized frequency deviation [Hz/V].
-            fc (float): Normalized carrier frequency.
-
-        Returns:
-            Array of real modulating signal.
-        '''
-
-        x = signal.hilbert(x)
-
-        # Remove carrier.
-        n = np.arange(0, len(x))
-        rx = x * np.exp(-1j * 2 * np.pi * fc * n)
-
-        # Extract phase of carrier.
-        phi = np.arctan2(np.imag(rx), np.real(rx))
-
-        # Calculate frequency from phase.
-        y = np.diff(np.unwrap(phi) / (2 * np.pi * df))
-
-        return y
 
     # Inicjalizacja linii
     def init_line():
@@ -203,21 +173,14 @@ def plotter():
             wave = np.frombuffer(stream.read(BUFFER), dtype=np.float32)
             data = np.fft.rfft(wave * signal.get_window('hamming', 1024), 1024)
             ym_demod = fm_demod(wave, 1.0, 3150.0)
-            # for i in range(len(ym_demod)):
-            #    if abs(ym_demod[i]) > abs(ym_demod[i-1]):
-            #        print((abs(ym_demod[i])/0.316))
-            # print((abs(ym_demod[i]) / 0.316))
-            # peak = signal.find_peaks(ym_demod)
-            # print(peak)
 
         except IOError:
             pass
         data2 = np.log10(np.sqrt(np.real(data) ** 2 + np.imag(data) ** 2) / BUFFER) * 10
         line1.set_data(r, data2)
         line2.set_data(r2, wave)
-        line3.set_data(r, data2)
         line4.set_data(r3, ym_demod)
-        return (line1, line2, line3, line4, line5)
+        return (line1, line2, line4, line5)
 
     ax1.set_xlim(0, 1024)
     ax1.set_ylim(-1, 1)
@@ -234,23 +197,15 @@ def plotter():
     ax2.set_xscale('symlog')
     ax2.grid()
 
-    ax3.set_xlim(2500, 3500)
-    ax3.set_ylim(-60, 0)
-    ax3.set_xlabel('Częstotliwość')
-    ax3.set_ylabel('dB')
-    ax3.set_title('Widmo sygnału wejściowego', pad=10)
-    ax3.grid()
-
     ax4.set_xlim(0, 1023)
     ax4.set_ylim(-0.1, 0.1)
     ax4.set_xlabel('Czas')
     ax4.set_ylabel('Amplituda')
-    ax4.set_title('Przebieg', pad=10)
+    ax4.set_title('Przebieg zdemodulowany', pad=10)
     ax4.grid()
 
-    # plt.subplots_adjust(top=0.8)
-
     line_ani = matplotlib.animation.FuncAnimation(fig, update_line, init_func=init_line, interval=0, blit=True)
+    fig.tight_layout(pad=0.02)
     plt.show()
 
 #root.geometry('400x300')
