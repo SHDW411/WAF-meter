@@ -103,46 +103,33 @@ def waf_demod():
         raw_filterd = butter_bandpass_filter(raw_frames_arr, lowcut, highcut, RATE, order=6)
         spectrum2 = abs(np.fft.rfft(raw_filterd * signal.get_window(WINDOW, len(raw_frames_arr)), RATE))
         sig_demod = fm_demod(raw_filterd, max_freq, max_freq)
-        sig_demod_help = sig_demod
         demod_filterd = butter_lowpass_filter(sig_demod, int(max_freq/4), RATE, order=6)
         one_sec = int(len(raw_filterd)/TIME_BUFFER)
         last_sec = one_sec*(TIME_BUFFER-1)
-        final_cut = demod_filterd[one_sec:last_sec]####
-        Mean = np.mean(final_cut)
-        stdev = statistics.stdev(final_cut)
-        sigma2 = 2*stdev
-        final_value = (sigma2/Mean)*100
+        final_cut = demod_filterd[one_sec:last_sec]
+        Mean = 
+        stdev = 
+        sigma2 = 2*statistics.stdev(final_cut)
+        final_value = (sigma2/np.mean(final_cut))*100
         return final_value
 
 def waf_meas():
     global max_freq
-    statusbar1['text'] = "Uruchomiono pomiar o długości " + str(TIME_BUFFER) +" sekund."
-    t1 = threading.Thread(target=data_collecting(), args=())
-    t1.start()
-    statusbar1['text'] = "Koniec nagrywania - obliczanie wyniku"
+    data_collecting()
     max_freq = spectrum_analisis()
     final_value = waf_demod()
     statusbar1['text'] = ("Wynik: " + str(format(round(final_value, 5))) + "%")
     statusbar2['text'] = ("Częstoliwość środkowa: " + str(max_freq) + "Hz ")
-    ts = np.arange(0, len(sig_demod_help))
-    fig, (ax1, ax2) = plt.subplots(2, 1)
-    ax1.plot(ts, sig_demod_help)
-    ax1.set_title('Modulating signal')
-    ax2.stem(abs(np.fft.rfft(sig_demod_help)),use_line_collection=True)
-    plt.show()
-
 
 def plotter():
     p = pyaudio.PyAudio()
-
     stream = p.open(format=pyaudio.paFloat32, channels=1, rate=RATE, input=True, output=False, frames_per_buffer=BUFFER)
 
     # Definiowanie wykresów i linii do animacji
-    fig, (ax1, ax2, ax4) = plt.subplots(3, 1)
-    line1 = ax2.plot([], [])[0]
-    line2 = ax1.plot([], [])[0]
-    line4 = ax4.plot([], [])[0]
-    line5 = ax4.plot([], [])[0]
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
+    line1 = ax1.plot([], [])[0]
+    line2 = ax2.plot([], [])[0]
+    line3 = ax3.plot([], [])[0]
 
     # Definiowanie osi czasu
     r = range(0, int(RATE / 2 + 1), int(RATE / BUFFER))
@@ -150,7 +137,6 @@ def plotter():
     ts = np.arange(0, 1024, 1 / RATE)
     r2 = np.arange(0, 1024)
     r3 = range(0, 1023)
-    bar_x = range(3050, 3250, 5)
 
     # Inicjalizacja linii
     def init_line():
@@ -159,7 +145,7 @@ def plotter():
         line2.set_data(bar_x, len(bar_x))
         line4.set_data(r, l)
         line5.set_data(r, l)
-        return (line1, line2, line4, line5,)
+        return (line1, line2, line3,)
 
     # Odświeżanie wykresu
     def update_line(i):
@@ -167,7 +153,7 @@ def plotter():
             wave = np.frombuffer(stream.read(BUFFER), dtype=np.float32)
             data = np.fft.rfft(wave * signal.get_window('hamming', 1024), 1024)
             ym_demod = fm_demod(wave, 1.0, 3150.0)
-
+            
         except IOError:
             pass
         data2 = np.log10(np.sqrt(np.real(data) ** 2 + np.imag(data) ** 2) / BUFFER) * 10
