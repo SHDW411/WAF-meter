@@ -8,13 +8,13 @@ import statistics
 import threading
 
 root = tkinter.Tk()
-TIME_BUFFER = 3 # Czas pomiaru
-BUFFER = 1024 # Długość analizy
+TIME_BUFFER = 7 # Czas pomiaru
+BUFFER = 44100 # Długość analizy
 FORMAT = pyaudio.paFloat32
 WINDOW = 'hamming' # Kształt okna
 CHANNELS = 1  # Ilość kanałów
 RATE = 44100  # Czestotliwość próbkowania
-CARRIER = 3150
+
 
 raw_frames_arr = np.empty(0)
 spectrum = np.empty(0)
