@@ -78,7 +78,8 @@ def fm_demod(x, df=1.0, fc=0.0):
 def data_collecting():
     global raw_frames_arr
     p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=BUFFER)
+    stream = p.open(format=FORMAT, channels=CHANNELS, 
+                    rate=RATE, input=True, frames_per_buffer=BUFFER)
     for i in range(0, int(RATE / BUFFER * TIME_BUFFER)):
         wave = np.frombuffer(stream.read(BUFFER), dtype=np.float32)
         raw_frames_arr = np.append(raw_frames_arr,wave)
@@ -89,7 +90,9 @@ def data_collecting():
 def spectrum_analisis():
     global spectrum
     global max_freq
-    spectrum = abs(np.fft.rfft(raw_frames_arr * signal.get_window(WINDOW, len(raw_frames_arr)), RATE))
+    spectrum = abs(np.fft.rfft(raw_frames_arr * signal.get_window(
+                    WINDOW, len(raw_frames_arr)), RATE))
+    spectrum
     max_freq = np.argmax(spectrum)
     return max_freq
 
@@ -109,7 +112,8 @@ def waf_demod():
 
 def plotter():
     p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paFloat32, channels=1, rate=RATE, input=True, output=False, frames_per_buffer=BUFFER)
+    stream = p.open(format=pyaudio.paFloat32, channels=1, 
+                    rate=RATE, input=True, output=False, frames_per_buffer=BUFFER)
     # Definiowanie wykresów i linii do animacji
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
     line1 = ax1.plot([], [])[0]
